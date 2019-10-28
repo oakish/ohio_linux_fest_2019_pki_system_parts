@@ -1,0 +1,115 @@
+:doctype: book
+// Document Setup
+:pdf-fontsdir: asciidoc/
+:pdf-stylesdir: asciidoc/
+:stylesdir: asciidoc/
+:pdf-style: pdf-stylesheet.yml
+:stylesheet: web.css
+:notitle:
+:numbered!:
+:data-uri:
+:allow-uri-read:
+:icons: font
+:chapter-label:
+// Table of Contents
+:toc: macro
+:toc-title: TABLE OF CONTENTS
+:toclevels: 3
+:toc-placement!:
+// Title Page Variables
+// xrefstyle full shows the section number and title
+:xrefstyle: full
+// expand levels of header numbers to 5
+:sectnumlevels: 5
+// Do not show the footer for HTML
+ifdef::backend-html5[]
+:nofooter:
+endif::[]
+
+toc::[]
+
+= Ohio Linux Fest 2019 Linux PKI System Parts
+
+:numbered:
+
+== VM Setup
+
+[source]
+----
+apt-get install vim python3-venv python3-pip git sudo
+----
+
+== Setup
+
+=== Requires
+
+. python3-venv
+. python3-pip
+
+=== Virtual environment setup
+
+[source]
+----
+python -m venv virtual_env
+source virtual_env/bin/activate
+pip install pip --upgrade
+pip install nbconvert
+pip install -r pip_needs
+----
+
+=== Setting up the server side
+
+[source]
+----
+jupyter notebook --generate-config
+cp first_jupyter_notebook_config.py ~/.jupyter/jupyter_notebook_config.py
+----
+
+== Running
+
+[source]
+----
+jupyter notebook
+----
+
+////
+ACRONYMS, ABBREVIATIONS, AND DEFINITIONS
+  The following tables should be in alphabetical order
+  Note they do not have a header line, so content can be added in order.
+  Add to the tables between the |==== tags
+  Example:
+    .Definitions                                   <-- table title (will display in presentation)
+    [%header, cols=2*a]                            <-- table format block
+    |====                                          <-- table opening tag
+    |Space|Is really, really big                   <-- term and definition/acronym and expansion
+                                                   <-- empty line for readability (optional)
+    |====                                          <-- table closing tag
+////
+
+////
+NOTE ON INTERNAL CROSS REFERENCE:
+  when using internal cross references use the internal function
+  instead of keeping track of the sections. The cross reference uses
+  <<_ (corner bracket, corner bracket, underscore)
+  then lowercase title with any non-alpha as a single underscore)
+  then close 2 corner brackets.
+  Example:
+    ==== Example of a sub-section Title
+  Cross Reference:
+    <<_example_of_a_sub_section_title>>
+  Will Appear as link in published document with subsection number:
+    i.e. "6.4.2. Example of a sub-section Title"
+////
+
+////
+APPENDIX SECTION
+  Appendix will be lettered based on the [appendix] tag, so the example title will appear as
+
+  APPENDIX A: TITLE OF APPENDIX
+
+  Additional appendix can be used by the [appendix] tag immediately followed on the next line with a
+    2 marker title (== APPENDIX TITLE) following appendix will use appropriate letters (B, C, D...)
+
+[appendix]
+== TITLE OF APPENDIX
+////
