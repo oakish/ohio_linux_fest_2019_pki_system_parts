@@ -40,13 +40,13 @@ So what is this all about?
 
 [.notes]
 --
-- understanding the Public Key Infrastructure
-- mostly focused on the client side
+- basics on Public Key Infrastructure
+- focused mostly on the client side
 - parts of the Linux PKI system
 - overview of tools and important features
-- deeper look at major tools 
+- deeper look at some of the major tools 
 - touch on some ancillary tools
-- give some lessons learned for debugging and troubleshooting
+- identify some additional un-discussed tools
 --
 
 ////
@@ -63,8 +63,10 @@ Who am I and what I do
 - Name and position
 - started in Linux somewhere around 1995
 - owned and operated a small business based around Linux thin clients in the early 2000s
-- CS degree from Kent State in 2007
-- have been at NASA since around 2006 
+- have been at NASA since 2006 
+- since 2017 in current position
+- have been providing handbook for Linux PIV implementation
+- have been managing Linux security standards and specifications
 --
 
 ////
@@ -78,11 +80,25 @@ Some bookkeeping
 
 [.notes]
 --
-- examples shown in Debian Buster
+- examples will be a debian buster
 - other distros have some differences
 - try to make notation of the differences
-- examples in jupyter notebook
-- provide additional resources
+- using a jupyter notebook
+- debian vm, all internal, example.com and hosts file
+--
+
+////
+ -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+////
+=== !
+
+[breadcrumb]#Personal Introduction#
+
+link:https://github.com/oakish/ohio_linux_fest_2019_pki_system_parts[]
+
+[notes]
+--
+- github site for information
 --
 
 ////
@@ -96,7 +112,10 @@ Keeping it manageable
 
 [.notes]
 --
-- lots of apps and libraries, try to keep it to the most relevant
+- scripted examples, not full tutorial on all tools
+- with lots of apps and libraries, try to keep it to the most relevant
+- example culminates with simple authentication to vm
+- using yubikey instead of emulation (some prepared shortcuts)
 --
 
 ////
@@ -106,26 +125,11 @@ Keeping it manageable
 
 [breadcrumb]#Personal Introduction#
 
-The setup
+Super simple PKI timeline
 
 [.notes]
 --
-- Jupyter Notebook
-- debian buster vm
-- debian-buster-server.example.com in hosts
---
-
-////
- -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
-////
-=== !
-
-[breadcrumb]#Personal Introduction#
-
-How we got here
-
-[.notes]
---
+- not all inclusive, not completely reliable
 - 1988 X.509
 - 1994 Netscape SSL v2
 - 1997 Netscape Certificate Server
@@ -135,6 +139,7 @@ How we got here
 - 2002 RFC 3280 X.509 PKI Certificate and CRL Profile (PKIX)
 - 2008 Dogtag Certificate Server open sourced
 - 2008 RFC 5280 X.509 PKI Certificate and CRL Profile
+- 2011 Start of p11-kit project
 --
 
 ////
@@ -176,9 +181,9 @@ Standards
 - x509 public key certificate standard
 - pkcs Public Key Cryptography Standards
 - #7 Message Syntax
-- #11 Token interface
-- #12 Personal Information Exchange
-- #15 Token format standard
+- #11 Token interface (HSM/Smartcard)
+- #12 Personal Information Exchange (archive)
+- #15 Token format standard (on-card structures)
 --
 
 ////
@@ -192,11 +197,14 @@ Certificates, Keys, and Secrets
 
 [.notes]
 --
-- structure of the certificate
-- der, pem, base64, fold
-- channel and data encryption
-- signatures and proof of authenticity
-- extended to identity
+- I am not a certificate expert, so I could get some of this wrong
+- public key wrapped with attributes
+- private part is key, no attributes
+- multiple formats, der, pem, base64, fold
+- signatures and proof of authenticity 
+- extensions allow purpose enforcement
+- encrypt/decrypt uses keys
+- can be locked with passphrases, pins, biometrics
 --
 
 ////
@@ -211,9 +219,12 @@ Trust
 [.notes]
 --
 - public and private parts
+- needs trusted authority, root (self signed at the top, choose to trust)
+- can get complicated, cross-trust, intermediate
+- expiration
+- external authority provide additional safeguards for validity, OCSP, CRL
 - OCSP Online certificate Status Protocol
 - CRL Certificate Revocation List
-- Authority, root, cross-trust, intermediate
 --
 
 ////
@@ -227,7 +238,10 @@ Proof of possession
 
 [.notes]
 --
-- hardware
+- hardware transport
+- may have physical activation (bio or pin)
+- can enforce private key safety (tpm, enforced lockout)
+- multifactor (certificate, bio/pin, network request)
 --
 
 ////
@@ -250,10 +264,34 @@ The basics
 
 [.notes]
 --
+- what we will explore by example
 - ca-certificates
 - openssl
 - nss3
 - p11-glue
+- server trust
+- authentication using pam_pkcs11
+--
+
+////
+ -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+////
+=== !
+
+[breadcrumb]#Common structure#
+
+Other things to explore
+
+[.notes]
+--
+- things we wont have time to explore in this session
+- CA servers like DogTag and boulder (let's encrypt)
+- pkinit and kerberos, freeIPA
+- gnome-keychain 
+- GnuTLS or language libraries like bouncy castle or wolfssl
+- virtual devices and derived certificates
+- attestation mechanisms
+- loads more features that use PKI like microservices
 --
 
 ////
@@ -267,11 +305,8 @@ Interface with hardware
 
 [.notes]
 --
-- tpm
-- opensc and coolkey
-- nss3 modutil
-- pcscd
-- usb
+- we will touch on hardware interface using opensc, pcscd, yubikey
+- other options not covered, coolkey, tpm, luks, token based options
 --
 
 ////
@@ -281,13 +316,15 @@ Interface with hardware
 
 [breadcrumb]#Common structure#
 
-On the shoulders
+Application layer
 
 [.notes]
 --
+- not exploring, but basics will provide underpinnings
 - display managers
 - sssd
-- browsers
+- browsers, gnome/system ca, firefox/chrome
+- many application use openssl, nss3, or gnutls
 --
 
 ////
@@ -301,244 +338,35 @@ The kernel crypto module
 
 [.notes]
 --
-- offloading
-- FIPS 140 features
+- not full PKI element
+- provides offloading block ciphers and hash functions
+- can tap into hardware acceleration
+- can provide FIPS 140 features, prevention of non compliant ciphers or hashes
+- can access with tools like openssl via engines 
 --
 
 ////
  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  SET  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  
-                                         system certificates
+                                          on to the examples
  -  -  -  -  -  -  -  -  -  -  -  -  -  -  SET TITLE SLIDE  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
 ////
 == !
 
-System certificates
+Exploration
 
 ////
  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
 ////
 === !
 
-[breadcrumb]#System certificates#
+[breadcrumb]#Exploration#
 
 Jupyter Notebook
 
 [.notes]
 --
-
---
-
-////
- =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  SET  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  
-                                              openssl
- -  -  -  -  -  -  -  -  -  -  -  -  -  -  SET TITLE SLIDE  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
-////
-== !
-
-OpenSSL
-
-////
- -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
-////
-=== !
-
-[breadcrumb]#OpenSSL#
-
-Jupyter Notebook
-
-[.notes]
---
-
---
-
-////
- =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  SET  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  
-                                                nss3
- -  -  -  -  -  -  -  -  -  -  -  -  -  -  SET TITLE SLIDE  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
-////
-== !
-
-NSS3
-
-////
- -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
-////
-=== !
-
-[breadcrumb]#NSS3#
-
-This section uses a Jupyter Notebook link:http://localhost:8888/notebooks/ohio_linuxfest_2019_pki_parts_nss3.ipynb[]
-
-[.notes]
---
---
-
-////
- =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  SET  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  
-                                          gluing it together
- -  -  -  -  -  -  -  -  -  -  -  -  -  -  SET TITLE SLIDE  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
-////
-== !
-
-The p11-glue project
-
-////
- -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
-////
-=== !
-
-[breadcrumb]#The p11-glue project#
-
-This section will be covered in the Jupyter Notebook link:http://localhost:8888/notebooks/ohio_linuxfest_2019_pki_parts_p11_glue.ipynb[]
-
-[.notes]
---
-- 
---
-
-////
- =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  SET  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  
-                                            other tools
- -  -  -  -  -  -  -  -  -  -  -  -  -  -  SET TITLE SLIDE  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
-////
-== !
-
-Other tools
-
-////
- -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
-////
-=== !
-
-[breadcrumb]#Other tools#
-
-External hardware interfaces
-
-[.notes]
---
-- CCID
-- PCSC
-- MUSCLE
-- OpenSC
-- Coolkey
---
-
-////
- -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
-////
-=== !
-
-[breadcrumb]#Other tools#
-
-PAM integration
-
-[.notes]
---
-- pam_pkcs11
-- sssd
---
-
-////
- -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
-////
-=== !
-
-[breadcrumb]#Other tools#
-
-Display managers and smartcard helpers
-
-[.notes]
---
-- gdm
-- kdm
-- lockscreens
---
-
-////
- -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
-////
-=== !
-
-[breadcrumb]#Other tools#
-
-Credentials
-
-[.notes]
---
-- pkinit and kerberos
-- FreeIPA and AD
-- gnome-keychain
---
-
-////
- -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
-////
-=== !
-
-[breadcrumb]#Other tools#
-
-CA software
-
-[.notes]
---
-- dogtag
-- boulder (let's encrypt)
---
-
-////
- =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  SET  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  
-                                          practical examples
- -  -  -  -  -  -  -  -  -  -  -  -  -  -  SET TITLE SLIDE  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
-////
-== !
-
-Practical examples
-
-////
- -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
-////
-=== !
-
-[breadcrumb]#Practical examples#
-
-Creating the certificates
-
-link:http://localhost:8888/notebooks/ohio_linuxfest_2019_pki_parts_ca.ipynb[]
-[.notes]
---
-
---
-
-////
- -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
-////
-=== !
-
-[breadcrumb]#Practical examples#
-
-Setting up a yubikey
-
-link:http://localhost:8888/notebooks/ohio_linuxfest_2019_pki_parts_yubikey.ipynb[]
-
-[.notes]
---
-
---
-
-////
- -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
-////
-=== !
-
-[breadcrumb]#Practical examples#
-
-Local user authentication
-
-link:http://localhost:8888/notebooks/ohio_linuxfest_2019_pki_parts_local_auth.ipynb[]
-
-[.notes]
---
-
+- Needs VM
+- Needs shell for token link
 --
 
 ////
@@ -557,39 +385,12 @@ Closing remarks
 
 [breadcrumb]#Closing remarks#
 
-Catch all
+Questions?
 
 [.notes]
 --
 - things not covered
---
-
-////
- -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
-////
-=== !
-
-[breadcrumb]#Closing remarks#
-
-Acknowledgements
-
-[.notes]
---
-- thanks and acknowledgements
---
-
-////
- -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
-////
-=== !
-
-[breadcrumb]#Closing remarks#
-
-References
-
-[.notes]
---
-- NOTE BULLETS
+- Ill try and leave references and links in the github repository
 --
 
 ////
