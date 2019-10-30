@@ -1,0 +1,628 @@
+:revealjs_theme: black
+:revealjs_plugin_pdf: enabled
+:revealjs_progress: false
+:customcss: presentation.css
+:icons: font
+:title-slide-background-image: title_slide.jpg
+
+////
+ +  +  +  +  +  +  +  +  +  +  +  +  +  START OF SLIDE DECK +  +  +  +  +  +  +  +  +  +  +  +  +  + 
+////
+[.white.background]
+= The Linux PKI System Parts
+
+Ohio Linux Fest 2019
+
+[subtitle]
+--
+Jeff Gilbert 
+
+NASA Cybersecurity Standards and Engineering Team (CSET)
+--
+
+////
+ =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  SET  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  
+                                            Introductions
+ -  -  -  -  -  -  -  -  -  -  -  -  -  -  SET TITLE SLIDE  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+////
+== !
+
+Personal Introduction
+
+////
+ -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+////
+=== !
+
+[breadcrumb]#Personal Introduction#
+
+So what is this all about?
+
+[.notes]
+--
+- understanding the Public Key Infrastructure
+- mostly focused on the client side
+- parts of the Linux PKI system
+- overview of tools and important features
+- deeper look at major tools 
+- touch on some ancillary tools
+- give some lessons learned for debugging and troubleshooting
+--
+
+////
+ -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+////
+=== !
+
+[breadcrumb]#Personal Introduction#
+
+Who am I and what I do
+
+[.notes]
+--
+- Name and position
+- started in Linux somewhere around 1995
+- owned and operated a small business based around Linux thin clients in the early 2000s
+- CS degree from Kent State in 2007
+- have been at NASA since around 2006 
+--
+
+////
+ -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+////
+=== !
+
+[breadcrumb]#Personal Introduction#
+
+Some bookkeeping
+
+[.notes]
+--
+- examples shown in Debian Buster
+- other distros have some differences
+- try to make notation of the differences
+- examples in jupyter notebook
+- provide additional resources
+--
+
+////
+ -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+////
+=== !
+
+[breadcrumb]#Personal Introduction#
+
+Keeping it manageable
+
+[.notes]
+--
+- lots of apps and libraries, try to keep it to the most relevant
+--
+
+////
+ -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+////
+=== !
+
+[breadcrumb]#Personal Introduction#
+
+The setup
+
+[.notes]
+--
+- Jupyter Notebook
+- debian buster vm
+- debian-buster-server.example.com in hosts
+--
+
+////
+ -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+////
+=== !
+
+[breadcrumb]#Personal Introduction#
+
+How we got here
+
+[.notes]
+--
+- 1988 X.509
+- 1994 Netscape SSL v2
+- 1997 Netscape Certificate Server
+- 1998 Mozilla and OpenSSL started, OpenSSL 0.9.1
+- 2000 NSS 3.1
+- 1999 RFC 2459 X.509 PKI Certificate and CRL Profile
+- 2002 RFC 3280 X.509 PKI Certificate and CRL Profile (PKIX)
+- 2008 Dogtag Certificate Server open sourced
+- 2008 RFC 5280 X.509 PKI Certificate and CRL Profile
+--
+
+////
+ -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+////
+=== !
+
+[breadcrumb]#Personal Introduction#
+
+The web of trust is cool
+
+[.notes]
+--
+- pgp and gpg
+- not what this talk is about
+- more an alternative to PKI
+--
+
+////
+ =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  SET  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  
+                                          view from the top
+ -  -  -  -  -  -  -  -  -  -  -  -  -  -  SET TITLE SLIDE  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+////
+== !
+
+The view from the top
+
+////
+ -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+////
+=== !
+
+[breadcrumb]#The view from the top#
+
+Standards
+
+[.notes]
+--
+- x509 public key certificate standard
+- pkcs Public Key Cryptography Standards
+- #7 Message Syntax
+- #11 Token interface
+- #12 Personal Information Exchange
+- #15 Token format standard
+--
+
+////
+ -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+////
+=== !
+
+[breadcrumb]#The view from the top#
+
+Certificates, Keys, and Secrets
+
+[.notes]
+--
+- structure of the certificate
+- der, pem, base64, fold
+- channel and data encryption
+- signatures and proof of authenticity
+- extended to identity
+--
+
+////
+ -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+////
+=== !
+
+[breadcrumb]#The view from the top#
+
+Trust
+
+[.notes]
+--
+- public and private parts
+- OCSP Online certificate Status Protocol
+- CRL Certificate Revocation List
+- Authority, root, cross-trust, intermediate
+--
+
+////
+ -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+////
+=== !
+
+[breadcrumb]#The view from the top#
+
+Proof of possession
+
+[.notes]
+--
+- hardware
+--
+
+////
+ =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  SET  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  
+                                           common structure
+ -  -  -  -  -  -  -  -  -  -  -  -  -  -  SET TITLE SLIDE  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+////
+== !
+
+Common structure
+
+////
+ -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+////
+=== !
+
+[breadcrumb]#Common structure#
+
+The basics
+
+[.notes]
+--
+- ca-certificates
+- openssl
+- nss3
+- p11-glue
+--
+
+////
+ -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+////
+=== !
+
+[breadcrumb]#Common structure#
+
+Interface with hardware
+
+[.notes]
+--
+- tpm
+- opensc and coolkey
+- nss3 modutil
+- pcscd
+- usb
+--
+
+////
+ -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+////
+=== !
+
+[breadcrumb]#Common structure#
+
+On the shoulders
+
+[.notes]
+--
+- display managers
+- sssd
+- browsers
+--
+
+////
+ -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+////
+=== !
+
+[breadcrumb]#Common structure#
+
+The kernel crypto module
+
+[.notes]
+--
+- offloading
+- FIPS 140 features
+--
+
+////
+ =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  SET  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  
+                                         system certificates
+ -  -  -  -  -  -  -  -  -  -  -  -  -  -  SET TITLE SLIDE  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+////
+== !
+
+System certificates
+
+////
+ -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+////
+=== !
+
+[breadcrumb]#System certificates#
+
+Jupyter Notebook
+
+[.notes]
+--
+
+--
+
+////
+ =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  SET  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  
+                                              openssl
+ -  -  -  -  -  -  -  -  -  -  -  -  -  -  SET TITLE SLIDE  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+////
+== !
+
+OpenSSL
+
+////
+ -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+////
+=== !
+
+[breadcrumb]#OpenSSL#
+
+Jupyter Notebook
+
+[.notes]
+--
+
+--
+
+////
+ =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  SET  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  
+                                                nss3
+ -  -  -  -  -  -  -  -  -  -  -  -  -  -  SET TITLE SLIDE  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+////
+== !
+
+NSS3
+
+////
+ -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+////
+=== !
+
+[breadcrumb]#NSS3#
+
+This section uses a Jupyter Notebook link:http://localhost:8888/notebooks/ohio_linuxfest_2019_pki_parts_nss3.ipynb[]
+
+[.notes]
+--
+--
+
+////
+ =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  SET  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  
+                                          gluing it together
+ -  -  -  -  -  -  -  -  -  -  -  -  -  -  SET TITLE SLIDE  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+////
+== !
+
+The p11-glue project
+
+////
+ -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+////
+=== !
+
+[breadcrumb]#The p11-glue project#
+
+This section will be covered in the Jupyter Notebook link:http://localhost:8888/notebooks/ohio_linuxfest_2019_pki_parts_p11_glue.ipynb[]
+
+[.notes]
+--
+- 
+--
+
+////
+ =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  SET  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  
+                                            other tools
+ -  -  -  -  -  -  -  -  -  -  -  -  -  -  SET TITLE SLIDE  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+////
+== !
+
+Other tools
+
+////
+ -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+////
+=== !
+
+[breadcrumb]#Other tools#
+
+External hardware interfaces
+
+[.notes]
+--
+- CCID
+- PCSC
+- MUSCLE
+- OpenSC
+- Coolkey
+--
+
+////
+ -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+////
+=== !
+
+[breadcrumb]#Other tools#
+
+PAM integration
+
+[.notes]
+--
+- pam_pkcs11
+- sssd
+--
+
+////
+ -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+////
+=== !
+
+[breadcrumb]#Other tools#
+
+Display managers and smartcard helpers
+
+[.notes]
+--
+- gdm
+- kdm
+- lockscreens
+--
+
+////
+ -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+////
+=== !
+
+[breadcrumb]#Other tools#
+
+Credentials
+
+[.notes]
+--
+- pkinit and kerberos
+- FreeIPA and AD
+- gnome-keychain
+--
+
+////
+ -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+////
+=== !
+
+[breadcrumb]#Other tools#
+
+CA software
+
+[.notes]
+--
+- dogtag
+- boulder (let's encrypt)
+--
+
+////
+ =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  SET  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  
+                                          practical examples
+ -  -  -  -  -  -  -  -  -  -  -  -  -  -  SET TITLE SLIDE  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+////
+== !
+
+Practical examples
+
+////
+ -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+////
+=== !
+
+[breadcrumb]#Practical examples#
+
+Creating the certificates
+
+link:http://localhost:8888/notebooks/ohio_linuxfest_2019_pki_parts_ca.ipynb[]
+[.notes]
+--
+
+--
+
+////
+ -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+////
+=== !
+
+[breadcrumb]#Practical examples#
+
+Setting up a yubikey
+
+link:http://localhost:8888/notebooks/ohio_linuxfest_2019_pki_parts_yubikey.ipynb[]
+
+[.notes]
+--
+
+--
+
+////
+ -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+////
+=== !
+
+[breadcrumb]#Practical examples#
+
+Local user authentication
+
+link:http://localhost:8888/notebooks/ohio_linuxfest_2019_pki_parts_local_auth.ipynb[]
+
+[.notes]
+--
+
+--
+
+////
+ =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  SET  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  
+                                           closing remarks
+ -  -  -  -  -  -  -  -  -  -  -  -  -  -  SET TITLE SLIDE  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+////
+== !
+
+Closing remarks
+
+////
+ -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+////
+=== !
+
+[breadcrumb]#Closing remarks#
+
+Catch all
+
+[.notes]
+--
+- things not covered
+--
+
+////
+ -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+////
+=== !
+
+[breadcrumb]#Closing remarks#
+
+Acknowledgements
+
+[.notes]
+--
+- thanks and acknowledgements
+--
+
+////
+ -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+////
+=== !
+
+[breadcrumb]#Closing remarks#
+
+References
+
+[.notes]
+--
+- NOTE BULLETS
+--
+
+////
+50 minute slot
+////
+// Dunning Kruger Effect
+// https://www.youtube.com/watch?v=GJz66wm95-M
+
+// TEMPLATE SLIDE BLOCKS
+// vim:9Y, vim:,+8s/^\/\///
+//////
+// =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  SET  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  
+//                                       description for comments
+// -  -  -  -  -  -  -  -  -  -  -  -  -  -  SET TITLE SLIDE  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+//////
+//== !
+//
+//SET TITLE SLIDE TEXT 
+//
+
+// vim:14Y, vim:,+13s/^\/\///
+//////
+// -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+//////
+//=== !
+//
+//[breadcrumb]#current set#
+//
+//SLIDE TEXT 
+//
+//[.notes]
+//--
+//- NOTE BULLETS
+//--
+//
+
