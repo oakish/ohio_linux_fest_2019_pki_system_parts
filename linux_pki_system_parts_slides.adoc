@@ -96,9 +96,11 @@ Some bookkeeping
 
 link:https://github.com/oakish/ohio_linux_fest_2019_pki_system_parts[]
 
-[notes]
+[.notes]
 --
 - github site for information
+- Jupyter notebook
+- REFS.adoc
 --
 
 ////
@@ -376,14 +378,14 @@ Jupyter Notebook
 ////
 == !
 
-Closing remarks
+The end
 
 ////
  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - SLIDE -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
 ////
 === !
 
-[breadcrumb]#Closing remarks#
+[breadcrumb]#The end#
 
 Questions?
 

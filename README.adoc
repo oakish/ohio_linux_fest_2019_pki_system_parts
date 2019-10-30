@@ -72,6 +72,13 @@ cp first_jupyter_notebook_config.py ~/.jupyter/jupyter_notebook_config.py
 jupyter notebook
 ----
 
+== Building the slides
+
+[source]
+----
+bundle exec asciidoctor-revealjs -a revealjsdir=reveal.js-3.8.0 -o ./presentation/linux_pki_system_parts_slides.html -b revealjs linux_pki_system_parts_slides.adoc
+----
+
 ////
 ACRONYMS, ABBREVIATIONS, AND DEFINITIONS
   The following tables should be in alphabetical order

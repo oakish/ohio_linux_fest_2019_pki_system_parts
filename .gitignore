@@ -107,3 +107,4 @@ virtual_env/
 # make sure to keep examples from being uploaded
 nssdb/
 certificates/
+.bundle/
