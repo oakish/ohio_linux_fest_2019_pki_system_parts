@@ -1,0 +1,18 @@
+.subtitle {
+  font-size: 75%;
+}
+
+.breadcrumb {
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-size: 20px;
+  color: #999999;
+}
+
+.anexample {
+  font-size: 32px;
+  color: #aab0aa;
+  font-stretch: condensed;
+  font-style: italic;
+}
