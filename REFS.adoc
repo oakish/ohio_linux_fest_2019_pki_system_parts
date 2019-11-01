@@ -1,0 +1,9 @@
+= Links and References used in this session
+
+. link:https://github.com/OpenSC/OpenSC/wiki/Frequently-Asked-Questions[]
+. link:https://www.dogtagpki.org/wiki/PKI_History[]
+. link:https://pki-tutorial.readthedocs.io/en/latest/expert/index.html[]
+. link:https://www-archive.mozilla.org/projects/security/pki/nss/history[]
+. link:https://www.openssl.org/blog/blog/2018/12/20/20years/[]
+. link:https://p11-glue.github.io/p11-glue/[]
+
